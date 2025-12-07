@@ -77,7 +77,6 @@ set(GSOAP_SOAPCPP2        "${GSOAP_DIR}/src/soapcpp2")
 set(GSOAP_WSDL2H          "${GSOAP_DIR}/wsdl/wsdl2h")
 
 
-
 function(gsoap_get_archive)
 
     if(EXISTS ${GSOAP_ARCHIVE})
@@ -112,7 +111,6 @@ function(gsoap_get_archive)
     if(NOT EXISTS ${GSOAP_ARCHIVE})
         message(FATAL_ERROR "Can't download ${GSOAP_ARCHIVE}")
     endif()
-
 endfunction()
 
 
@@ -165,7 +163,6 @@ function(gsoap_add_patches)
     endforeach()
 
 endfunction()
-
 
 
 function(gsoap_build)
@@ -224,4 +221,3 @@ message(STATUS "GSOAP_CK_CXX_LIBRARY  = ${GSOAP_CK_CXX_LIBRARY}")
 message(STATUS "GSOAP_SSL_CXX_LIBRARY = ${GSOAP_SSL_CXX_LIBRARY}")
 
 message(STATUS "GSOAP_SOAPCPP2        = ${GSOAP_SOAPCPP2}")
-message(STATUS "GSOAP_WSDL2H          = ${GSOAP_WSDL2H}")
