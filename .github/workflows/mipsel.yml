@@ -1,10 +1,6 @@
 name: Build for MIPSel Linux  
   
 on:  
-  push:  
-    branches: [ main, master ]  
-  pull_request:  
-    branches: [ main, master ]  
   workflow_dispatch:  
   
 jobs:  
@@ -14,9 +10,7 @@ jobs:
     steps:  
     - name: Checkout code  
       uses: actions/checkout@v4  
-      with:  
-        submodules: recursive  
-          
+        
     - name: Install dependencies  
       run: |  
         sudo apt update  
@@ -30,16 +24,19 @@ jobs:
           yacc \  
           wget \  
           unzip \  
-          patch  
+          patch \  
+          gcc-mipsel-linux-gnu \  
+          g++-mipsel-linux-gnu \  
+          libc6-dev-mipsel-cross \  
+          linux-libc-dev-mipsel-cross  
             
-    - name: Setup MIPSel toolchain  
+    - name: Pre-download gSOAP  
       run: |  
-        # 安装MIPSel交叉编译工具链  
-        sudo apt install -y gcc-mipsel-linux-gnu g++-mipsel-linux-gnu  
-          
-        # 验证工具链  
-        mipsel-linux-gnu-gcc --version  
-        mipsel-linux-gnu-g++ --version  
+        mkdir -p SDK  
+        wget -O SDK/gsoap_2.8.92.zip \  
+          https://github.com/SrcBackup/gsoap/releases/download/v2.8.x/gsoap_2.8.92.zip || \  
+        wget -O SDK/gsoap_2.8.92.zip \  
+          https://sourceforge.net/projects/gsoap2/files/gsoap_2.8.92.zip/download  
           
     - name: Configure CMake for MIPSel  
       run: |  
@@ -53,15 +50,19 @@ jobs:
           -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \  
           -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \  
           -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \  
-          -DUSE_SYSTEM_GSOAP=0  
+          -DUSE_SYSTEM_GSOAP=0 \  
+          -DCMAKE_VERBOSE_MAKEFILE=ON  
             
-    - name: Build  
+    - name: Build with verbose output  
       run: |  
-        cmake --build build-mipsel --parallel $(nproc)  
+        cmake --build build-mipsel --verbose --parallel 1  
           
-    - name: Upload artifacts  
-      uses: actions/upload-artifact@v4  
-      with:  
-        name: onvif_srvd-mipsel  
-        path: build-mipsel/onvif_srvd  
-        retention-days: 30
+    - name: Check build result  
+      run: |  
+        if [ -f build-mipsel/onvif_srvd ]; then  
+          file build-mipsel/onvif_srvd  
+          ls -la build-mipsel/onvif_srvd  
+        else  
+          echo "Build failed - binary not found"  
+          exit 1  
+        fi
