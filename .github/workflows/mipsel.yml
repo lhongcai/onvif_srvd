@@ -22,21 +22,18 @@ jobs:
           bison \  
           byacc \  
           yacc \  
-          wget \  
-          unzip \  
-          patch \  
           gcc-mipsel-linux-gnu \  
           g++-mipsel-linux-gnu \  
           libc6-dev-mipsel-cross \  
-          linux-libc-dev-mipsel-cross  
+          linux-libc-dev-mipsel-cross \  
+          gsoap \  
+          libgsoap-dev  
             
-    - name: Pre-download gSOAP  
+    - name: Verify toolchain  
       run: |  
-        mkdir -p SDK  
-        wget -O SDK/gsoap_2.8.92.zip \  
-          https://github.com/SrcBackup/gsoap/releases/download/v2.8.x/gsoap_2.8.92.zip || \  
-        wget -O SDK/gsoap_2.8.92.zip \  
-          https://sourceforge.net/projects/gsoap2/files/gsoap_2.8.92.zip/download  
+        mipsel-linux-gnu-gcc --version  
+        which wsdl2h  
+        which soapcpp2  
           
     - name: Configure CMake for MIPSel  
       run: |  
@@ -50,19 +47,20 @@ jobs:
           -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \  
           -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \  
           -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \  
-          -DUSE_SYSTEM_GSOAP=0 \  
-          -DCMAKE_VERBOSE_MAKEFILE=ON  
+          -DUSE_SYSTEM_GSOAP=1 \  
+          -DUSE_GSOAP_STATIC_LIB=1  
             
-    - name: Build with verbose output  
+    - name: Build  
       run: |  
-        cmake --build build-mipsel --verbose --parallel 1  
+        cmake --build build-mipsel --verbose  
           
-    - name: Check build result  
+    - name: Check binary  
       run: |  
         if [ -f build-mipsel/onvif_srvd ]; then  
           file build-mipsel/onvif_srvd  
           ls -la build-mipsel/onvif_srvd  
         else  
-          echo "Build failed - binary not found"  
+          echo "Build failed"  
+          find build-mipsel -name "*.log" -exec cat {} \;  
           exit 1  
         fi
